@@ -1,0 +1,5 @@
+*.o
+*.out
+include/armadillo
+include/armadillo_bits/*
+doc/*
