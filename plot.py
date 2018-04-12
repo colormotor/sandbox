@@ -10,6 +10,7 @@ class Figure:
         self.Xs = []
         self.Ys = []
         self.markers = []
+        self.vlines = []
 
         self.colors = []
         self.axis = 'normal'
@@ -46,6 +47,9 @@ class Figure:
 
     def add_marker(self, p, color=[1,0,0,1.], size=3.):
         self.markers.append((p, color, size))
+    
+    def add_vlines(self, x, color=[1, 0, 0, 1]):
+        self.vlines.append((x, color))
 
     def show(self, filled=False, alpha=1., histo=False):
         color(0.5)
@@ -152,6 +156,12 @@ class Figure:
             x, y = map_x(p[0]), map_y(p[1])
             fillCircle([l + x*w, t + h - y*h], size)
 
+        for x, clr in self.vlines:
+            color(clr)
+            for px in x:
+                px = map_x(px)
+                drawLine( [l + px*w, t], [l + px*w, t+h] )
+
         return miny, maxy
         
 fig = Figure()
@@ -166,6 +176,12 @@ def plot(*args):
 
 def add_marker(*args):
     fig.add_marker(*args)
+
+def cazzo():
+    print('caz')
+
+def add_vlines(*args):
+    fig.add_vlines(*args)
 
 def axis(ax):
     fig.axis(ax)

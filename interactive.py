@@ -116,7 +116,7 @@ def interact_simple(pts, selected, dobegin=True):
     return pts, selected, res
 
 class ContourMaker:
-    def __init__(self):
+    def __init__(self, allow_delete=True, allow_add=True):
         self.pts = np.zeros((2,0))
         self.pts_interact = np.zeros((2,0))
         self.tool = 0
@@ -124,6 +124,9 @@ class ContourMaker:
         self.insert_index = None
         self.delete_index = None
         self.dobegin = True
+
+        self.allow_add = allow_add
+        self.allow_delete = allow_delete
 
     def clear(self):
         self.pts = np.zeros((2,0))
@@ -155,7 +158,13 @@ class ContourMaker:
 
     
     def interact(self, insert_cb=None, delete_cb=None):
-        self.pts, self.selected, self.tool, self.insert_index, self.delete_index, mod = interact(self.pts, self.selected, self.tool, self.dobegin, get_modified=True)
+        self.pts, self.selected, self.tool, self.insert_index, self.delete_index, mod = interact(self.pts, 
+                                                                                        self.selected, 
+                                                                                        self.tool, 
+                                                                                        self.dobegin, 
+                                                                                        get_modified=True,
+                                                                                        allow_add=self.allow_add,
+                                                                                        allow_delete=self.allow_delete)
         if self.insert_index != None and insert_cb is not None:
             insert_cb(self.insert_index)
         if self.delete_index != None and delete_cb is not None:
