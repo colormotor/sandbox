@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys
 
-setup(name='autograff',
+setup(name='sandbox',
         version='0.1',
         description='Colormotor sandbox utilities',
         url='',
