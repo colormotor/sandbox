@@ -3,7 +3,7 @@ import sys
 
 setup(name='autograff',
         version='0.1',
-        description='Autograff Python utilities',
+        description='Colormotor sandbox utilities',
         url='',
         author='Daniel Berio',
         author_email='drand48@gmail.com',

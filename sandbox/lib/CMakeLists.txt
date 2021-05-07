@@ -34,7 +34,7 @@ set(src
 # 	message(FATAL_ERROR "You need to set the path for colormotor through the COLORMOTOR_PATH env var")
 # endif()
 
-set(COLORMOTOR_PATH "${PROJECT_SOURCE_DIR}/../../../../colormotor")
+set(COLORMOTOR_PATH "${PROJECT_SOURCE_DIR}/../../../../../colormotor")
 
 include_directories(
 	  ${COLORMOTOR_PATH}/src/
@@ -54,13 +54,13 @@ if(APPLE)
 	set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
 	endif()
 
-	set(BASE_SEARCH_DIR $ENV{HOME}/miniconda3)
+	set(BASE_SEARCH_DIR $ENV{HOME}/opt/miniconda3)
 
 	set(CMAKE_EXE_LINKER_FLAGS "-rpath ${BASE_SEARCH_DIR}/lib")
 
 
 	include_directories(
-		${BASE_SEARCH_DIR}/lib/python3.6/site-packages/numpy/core/include/
+		${BASE_SEARCH_DIR}/lib/python3.8/site-packages/numpy/core/include/
 		${BASE_SEARCH_DIR}/include
 		${BASE_SEARCH_DIR}/include/opencv4
 		${PYTHON_INCLUDE_PATH}
