@@ -5,7 +5,7 @@ namespace cm
     float brushSize( float v, float minv, float maxv, float spread = 3.0 );
     void drawBrush( Image& img, const Contour & ctr_, int animIndex, float dt, float brushSz, float brushMinv, float brushMaxv, float brushSpread, float dist=1.  );
     void drawBrushExp( Image& img, const Contour & ctr_, int animIndex, float dt, float rMin, float rMax, float dist=1., float lowpass=1., float baseSpeed=0.  );
-     
+    void drawBrushExpSpeed( Image& img, const Contour & ctr_,  arma::vec S, int animIndex, float rMin, float rMax, float dist=1., float lowpass=1., float baseSpeed=0. );
     void drawBrushUniform( Image& img, const Contour & ctr_, int animIndex, float size, float dist=1. );
 
     /// Draws a 2d Gaussian

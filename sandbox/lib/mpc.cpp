@@ -5,8 +5,8 @@
 
 #include "mpc.h"
 #include "render_utils.h"
-#include <LinAlg/LapackWrapperExtra.h>
-#include <SymEigsSolver.h>
+//#include <LinAlg/LapackWrapperExtra.h>
+//#include <SymEigsSolver.h>
 
 // We are going to calculate the eigenvalues of M
 
@@ -16,31 +16,31 @@ using namespace cm;
 namespace cm
 {
 
-void symEigs( arma::vec* Dv, arma::mat* V, arma::mat A, int numEigs, int convFactor)
-{
-    // Construct matrix operation object using the wrapper class DenseGenMatProd
-        DenseGenMatProd<double> op(A);
-        // Construct eigen solver object, requesting the largest three eigenvalues
-        SymEigsSolver< double, LARGEST_ALGE, DenseGenMatProd<double> > eigs(&op, numEigs, convFactor);
+// void symEigs( arma::vec* Dv, arma::mat* V, arma::mat A, int numEigs, int convFactor)
+// {
+//     // Construct matrix operation object using the wrapper class DenseGenMatProd
+//         DenseGenMatProd<double> op(A);
+//         // Construct eigen solver object, requesting the largest three eigenvalues
+//         SymEigsSolver< double, LARGEST_ALGE, DenseGenMatProd<double> > eigs(&op, numEigs, convFactor);
         
-        eigs.init();
-        int nconv = eigs.compute();
+//         eigs.init();
+//         int nconv = eigs.compute();
         
-        if(nconv > 0)
-        {
-            *Dv = eigs.eigenvalues();
-            *V = eigs.eigenvectors(nconv);
-        }
-        else
-        {
-            *Dv = arma::zeros(2);
-            *V = arma::eye(2,2);
-        }
-    //assert(0);
-}
+//         if(nconv > 0)
+//         {
+//             *Dv = eigs.eigenvalues();
+//             *V = eigs.eigenvectors(nconv);
+//         }
+//         else
+//         {
+//             *Dv = arma::zeros(2);
+//             *V = arma::eye(2,2);
+//         }
+//     //assert(0);
+// }
 
 
-int factorials[15] =
+double factorials[15] =
 {
    1,
     1,
@@ -419,6 +419,7 @@ void MPC::stochasticSample(int numSamples, int numEigs, int convFactor, float si
 
     arma::vec Dv;
     arma::mat V;
+    /*
     symEigs(&Dv, &V, Cov, numEigs, convFactor);
     mat D = arma::diagmat(arma::sqrt(Dv));
     
@@ -430,7 +431,7 @@ void MPC::stochasticSample(int numSamples, int numEigs, int convFactor, float si
         mat offset = V * D * o;
         mat O = reshape( offset, this->A.n_cols*2, n );  // 2 is a big hack!!!
         stochasticSamples.push_back(this->P + O.submat(0,0, 2-1, n-1));
-    }
+    } */
 }
 
 }

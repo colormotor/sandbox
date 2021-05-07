@@ -7,12 +7,17 @@ set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 
 add_definitions(-g)
 # make it c++11 compatible
-add_definitions(-std=c++11)
+# add_definitions(-std=c++11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 # Makes this cross compatible with colormotor bindings
 add_definitions(-DSWIG_TYPE_TABLE=colormotor)
-
+add_definitions(-DAG_DISABLE_COLORMOTOR)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../)
+
+find_package(PythonLibs REQUIRED)
+
 
 set(src
 	${PROJECT_SOURCE_DIR}/autograff_utils_wrap.cxx
@@ -23,15 +28,13 @@ set(src
 	${PROJECT_SOURCE_DIR}/rasterizer.cpp
 )
 
-add_library(pyautograff_utils SHARED
-	${src}
-)
+# if(DEFINED ENV{COLORMOTOR_PATH})
+# 	set(COLORMOTOR_PATH $ENV{COLORMOTOR_PATH})
+# else()
+# 	message(FATAL_ERROR "You need to set the path for colormotor through the COLORMOTOR_PATH env var")
+# endif()
 
-if(DEFINED ENV{COLORMOTOR_PATH})
-	set(COLORMOTOR_PATH $ENV{COLORMOTOR_PATH})
-else()
-	message(FATAL_ERROR "You need to set the path for colormotor through the COLORMOTOR_PATH env var")
-endif()
+set(COLORMOTOR_PATH "${PROJECT_SOURCE_DIR}/../../../../colormotor")
 
 include_directories(
 	  ${COLORMOTOR_PATH}/src/
@@ -40,47 +43,49 @@ include_directories(
 )
 
 if(APPLE)
-	set(PYTHON_BASE_DIR $ENV{HOME}/miniconda2)
-	message('${PROJECT_SOURCE_DIR}/../../../../colormotor/addons/pycolormotor/modules')
+	# Nasty workaround to avoid conflicts (which popped out of nowhere, but make sense)
+	# with multiple linking of Python.:
+	# https://stackoverflow.com/questions/25421479/clang-and-undefined-symbols-when-building-a-library
+	# The crpytic PyThreadState_Get() error message, means that 
+	# the function is defined BOTH in the py executable and in the linked lib, evidently the old Python
+	# interpreter used to link to a shared lib while the new one has all static linked?. 
+	# Ideally, we would want to use distutils to get information on how to link python, quite involved anyhow
+	if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
+	endif()
+
+	set(BASE_SEARCH_DIR $ENV{HOME}/miniconda3)
+
+	set(CMAKE_EXE_LINKER_FLAGS "-rpath ${BASE_SEARCH_DIR}/lib")
+
 
 	include_directories(
-		${PYTHON_BASE_DIR}/lib/python2.7/site-packages/numpy/core/include/
-        ${PYTHON_BASE_DIR}/include
-        ${PYTHON_BASE_DIR}/include/python2.7
+		${BASE_SEARCH_DIR}/lib/python3.6/site-packages/numpy/core/include/
+		${BASE_SEARCH_DIR}/include
+		${BASE_SEARCH_DIR}/include/opencv4
+		${PYTHON_INCLUDE_PATH}
 	)
 
 	link_directories(
-		${PYTHON_BASE_DIR}/lib
-	)
-	#${PROJECT_SOURCE_DIR}/../../../../colormotor/addons/pycolormotor/modules
-	target_link_libraries(pyautograff_utils
-		${PYTHON_BASE_DIR}/lib/libopencv_core.dylib
-		${PYTHON_BASE_DIR}/lib/libopencv_imgproc.dylib
-		${PYTHON_BASE_DIR}/lib/libopencv_highgui.dylib
-		${PYTHON_BASE_DIR}/lib/libopencv_imgcodecs.dylib
-		${PYTHON_BASE_DIR}/lib/libarmadillo.dylib
-		lapack
-		blas
-		glfw
-		${COLORMOTOR_PATH}/addons/pycolormotor/modules/_cm.so
-		${PYTHON_BASE_DIR}/lib/libpython2.7.dylib
-		"-framework CoreFoundation"
-		"-framework OpenGL"	
-		"-framework Cocoa"
-		"-framework AppKit"
-		"-framework CoreVideo"
-		"-framework QTKit"
-		"-framework IOKit"
-		"-framework AGL"
-		"-framework GLUT"
-		
+		${BASE_SEARCH_DIR}/lib
 	)
 
+	add_library(pyautograff_utils SHARED
+		${src}
+	)
+
+	#${PROJECT_SOURCE_DIR}/../../../../colormotor/addons/pycolormotor/modules
+	target_link_libraries(pyautograff_utils
+		#${COLORMOTOR_PATH}/addons/pycolormotor/modules/_cm.so
+	)
+	
 	add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND rm -f ${PROJECT_SOURCE_DIR}/../_autograff_utils.so 
     COMMAND ln -s ${PROJECT_SOURCE_DIR}/../libpyautograff_utils.dylib ${PROJECT_SOURCE_DIR}/../_autograff_utils.so 
 	)
+	
+
 elseif(UNIX)
 	find_package(Armadillo REQUIRED)
 	find_package(PkgConfig REQUIRED)
@@ -119,6 +124,9 @@ elseif(UNIX)
 	)
 
 	# Mess
+	add_library(pyautograff_utils SHARED
+		${src}
+	)
 
 	target_link_libraries(pyautograff_utils
 	rt

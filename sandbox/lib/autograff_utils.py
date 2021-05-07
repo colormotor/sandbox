@@ -309,6 +309,10 @@ def drawBrushExp(img, ctr_, animIndex, dt, rMin, rMax, dist=1., lowpass=1., base
     return _autograff_utils.drawBrushExp(img, ctr_, animIndex, dt, rMin, rMax, dist, lowpass, baseSpeed)
 drawBrushExp = _autograff_utils.drawBrushExp
 
+def drawBrushExpSpeed(img, ctr_, S, animIndex, rMin, rMax, dist=1., lowpass=1., baseSpeed=0.):
+    return _autograff_utils.drawBrushExpSpeed(img, ctr_, S, animIndex, rMin, rMax, dist, lowpass, baseSpeed)
+drawBrushExpSpeed = _autograff_utils.drawBrushExpSpeed
+
 def drawBrushUniform(img, ctr_, animIndex, size, dist=1.):
     return _autograff_utils.drawBrushUniform(img, ctr_, animIndex, size, dist)
 drawBrushUniform = _autograff_utils.drawBrushUniform

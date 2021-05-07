@@ -190,28 +190,78 @@ class ContourMaker:
         if self.pts_interact.shape[1]:
             draw(self.pts_interact, False)
 
-class ShapeEdit:
+
+class ShapeState:
     def __init__(self):
-        self.shape = [] #np.zeros((2,0))]
+        self.clear()
+        
+    
+    def clear(self):
+        self.data = {}
+        self.data['shape'] = [np.zeros((2,0))]
+
+    def consolidate(self):
+        ''' Gets called upon loading, to handle missing data 
+        (which can happen when loading data saved with previous iterations of a given state instance)''' 
+        pass
+
+    # Callbacks
+    def new_shape(self):
+        pass
+
+    def point_inserted(self, shape_ind, ind):
+        pass
+
+    def point_removed(self, shape_ind, ind):
+        pass
+
+    def contour_added(self):
+        pass
+
+    def contour_removed(self, ind):
+        pass
+
+    def interact(self, tool, selected):
+        pass
+
+class ShapeEdit:
+    def __init__(self, state=None):
+        if state==None:
+            self.state = ShapeState()
+        else:
+            self.state = state
         self.tool = 0
         self.selected = None
-        self.selected_ctr = None
+        self.selected_ctr = 0
         self.dobegin = True
+        self.clear()
 
-    def load_svg(self, path=None):
+    def load_svg(self, path=None, rect=None, padding=0):
         if path==None:
             path = openFileDialog('svg')
         if path != None:
-            svg = Shape()
-            svg.loadSvg(path)
-            self.shape = shape_to_list(svg)
+            self.shape = svg.load_svg(path)
+            if rect is not None:
+                self.state.shape = geom.transform_to_rect(self.rect, S, padding=padding)
+                self.state.shape_updated()
+
+    def clear(self):
+        self.state.clear()
+        self.selected = None
+        self.selected_ctr = 0
 
     def load(self, path):
         if os.path.isfile(path):
-            self.shape = utils.load_pkl(path)
+            self.state.data = utils.load_pkl(path)
+            self.state.consolidate()
+
+            self.selected = None
+            self.selected_ctr = 0
+            self.state.update()
+            
 
     def save(self, path):
-        utils.save_pkl(self.shape, path)
+        utils.save_pkl(self.state.data, path)
 
     def begin(self):
         ui.begin()
@@ -226,17 +276,148 @@ class ShapeEdit:
             return None, None
         return self.selected_ctr, self.selected
 
+    def is_valid(self):
+        S = self.shape
+        if not S:
+            return False
+        if S[0].shape[1] < 2:
+            return False
+        return True
+        
     def interact(self):
+        
+        self.begin()
         m = len(self.shape)
-        self.selected_ctr = None
+        mod = False
+
+        def must_remove(i):
+            return (len(self.state.data['shape']) > 1 
+                    and self.state.data['shape'][i].shape[1]==0)
+
+        start_id = 0
         for i in range(m):
-            self.shape[i], self.selected, res = interact_simple(self.shape[i], self.selected)
-            if res:
+            
+            if i == self.selected_ctr:
+                selected = self.selected 
+            else:
+                selected = None
+            
+            allow_add = self.selected_ctr == i
+            #print(('Allow add=', allow_add, self.selected_ctr))
+            (self.state.data['shape'][i], 
+             selected, _, 
+             insert_index, delete_index, 
+             mod) = interact(self.state.data['shape'][i], selected, self.tool, 
+                             dobegin=self.dobegin, 
+                             allow_add=allow_add, 
+                             toolbar='', 
+                             get_modified=True,
+                             start_id=start_id)
+            start_id += self.state.data['shape'][i].shape[1]
+
+            if i == self.selected_ctr and selected is None:
+                self.selected = None
+                
+            if insert_index is not None:
+                print(('Insert',i, insert_index))
+                self.state.point_inserted(i, insert_index)
+
+            if delete_index is not None:
+                print(('Delete',i, insert_index))
+                self.state.point_removed(i, delete_index)
+                self.selected = None
+                self.selected_ctr = 0
+
+            if delete_index is not None and must_remove(i):
+                print(('Removing contour',i))
+                self.state.data['shape'].pop[i]
+                self.state.contour_removed(i)
+                self.selected_ctr = None
+                self.selected = None
+            elif mod:
                 self.selected_ctr = i
+                self.selected = selected
+                break
+        
+        
+        if app.keyPressed(app.KEY_ENTER):
+            skip = self.state.data['shape'] and self.state.data['shape'][-1].shape[1] == 0
+            if not skip:
+                print(('Adding contour'))
+                self.state.data['shape'].append(np.zeros((2,0)))
+                self.state.contour_added()
+                self.selected_ctr = m
+                self.selected = None
+            else:
+                self.selected_ctr = len(self.state.data['shape'])-1
+                self.selected = None
+
+        self.tool = ui.toolbar("test", 'abcd', self.tool)
+
+        if not mod:
+            self.state.interact(self.tool, (self.selected_ctr, self.selected))
+
+        self.end()
+
+    @property
+    def shape(self):
+        return self.state.data['shape']
 
     def draw(self):
-        for pts in self.shape:
-            draw(pts, False)
+        for P in self.state.data['shape']:
+            if P.shape[1]:
+                draw(P, False)
+
+
+
+
+# class ShapeEdit:
+#     def __init__(self):
+#         self.shape = [] #np.zeros((2,0))]
+#         self.tool = 0
+#         self.selected = None
+#         self.selected_ctr = None
+#         self.dobegin = True
+
+#     def load_svg(self, path=None):
+#         if path==None:
+#             path = openFileDialog('svg')
+#         if path != None:
+#             svg = Shape()
+#             svg.loadSvg(path)
+#             self.shape = shape_to_list(svg)
+
+#     def load(self, path):
+#         if os.path.isfile(path):
+#             self.shape = utils.load_pkl(path)
+
+#     def save(self, path):
+#         utils.save_pkl(self.shape, path)
+
+#     def begin(self):
+#         ui.begin()
+#         self.dobegin = False
+
+#     def end(self):
+#         ui.end()
+#         self.dobegin = True
+
+#     def get_selected(self):
+#         if self.selected_ctr == None or self.selected == None:
+#             return None, None
+#         return self.selected_ctr, self.selected
+
+#     def interact(self):
+#         m = len(self.shape)
+#         self.selected_ctr = None
+#         for i in range(m):
+#             self.shape[i], self.selected, res = interact_simple(self.shape[i], self.selected)
+#             if res:
+#                 self.selected_ctr = i
+
+#     def draw(self):
+#         for pts in self.shape:
+#             draw(pts, False)
         
 
 class SemiTiedWidget:
@@ -284,7 +465,7 @@ class SemiTiedWidget:
         try:
             self.params = utils.load_pkl(path)
         except (IOError):
-            print "Could not load pkl " + path
+            print("Could not load pkl " + path)
 
     def make_gmm(self, X, min_rnd=1., scales=None):
         Mu = np.array(X)

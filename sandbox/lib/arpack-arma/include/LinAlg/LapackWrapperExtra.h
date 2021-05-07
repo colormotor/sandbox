@@ -85,10 +85,10 @@ namespace arma
     }
 
 
-
+    /*
     namespace lapack
     {
-        /*
+        
         template<typename eT>
         inline
         void
@@ -149,8 +149,8 @@ namespace arma
                 typedef std::complex<double> T;
                 arma_fortran(arma_zgetrs)(trans, n, nrhs, (T*)a, lda, ipiv, (T*)b, ldb, info);
             }
-        }*/
-        /*
+        }
+        
         template<typename eT>
         inline
         void
@@ -168,8 +168,8 @@ namespace arma
                 typedef double T;
                 arma_fortran(arma_dlahqr)(wantt, wantz, n, ilo, ihi, (T*)h, ldh, (T*)wr, (T*)wi, iloz, ihiz, (T*)z, ldz, info);
             }
-        }*/
-        /*
+        }
+        
         template<typename eT>
         inline
         void
@@ -188,8 +188,8 @@ namespace arma
                 arma_fortran(arma_dstedc)(compz, n, (T*)d, (T*)e, (T*)z, ldz, (T*)work, lwork, iwork, liwork, info);
             }
         }
-        */
-        /*template<typename eT>
+        
+        template<typename eT>
         inline
         void
         trevc(char* side, char* howmny, blas_int* select, blas_int* n, eT* t, blas_int* ldt, eT* vl, blas_int* ldvl, eT* vr, blas_int* ldvr, blas_int* mm, blas_int* m, eT* work, blas_int* info)
@@ -206,9 +206,9 @@ namespace arma
                 typedef double T;
                 arma_fortran(arma_dtrevc)(side, howmny, select, n, (T*)t, ldt, (T*)vl, ldvl, (T*)vr, ldvr, mm, m, (T*)work, info);
             }
-        }*/
+        }
     }
-
+    */
 
 
     #endif  // ARMA_USE_LAPACK

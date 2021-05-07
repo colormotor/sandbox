@@ -28,12 +28,24 @@ double lognormal( double x, double x0, double mu, double sigma )
     
     return exp( -pow( log(x) - mu ,2) / (2*sigma*sigma) ) / (x*sqrt(2.0*PI)*sigma);
 }
-               
-void slm_mu_sigma( vec* mu, vec* sigma, const vec& alpha, const vec& d )
+
+
+// void slm_mu_sigma( vec* mu, vec* sigma, const vec& alpha, const vec& d )
+// {
+//     *sigma = log(1.0 + 1E-10 + alpha);
+//     *mu = -log(  -(exp(-3* (*sigma)) - exp(3* (*sigma))) % (1.0 / d) );
+// }
+
+void slm_mu_sigma( vec* mu, vec* sigma, const vec& Ac, const vec& T )
 {
-    *sigma = log(1.0 + 1E-10 + alpha);
-    *mu = -log(  -(exp(-3* (*sigma)) - exp(3* (*sigma))) % (1.0 / d) );
+    *sigma = sqrt(- log(1.0 - Ac) );
+    *mu = 3. * (*sigma) - log( (-1. + exp(6.*(*sigma))) / T );
+//    return mu, sigma
+
+  //  *sigma = log(1.0 + 1E-10 + alpha);
+   // *mu = -log(  -(exp(-3* (*sigma)) - exp(3* (*sigma))) % (1.0 / d) );
 }
+
 
 double lognormal_interpolate( double a,
                               double b,
@@ -51,17 +63,17 @@ double lognormal_interpolate( double a,
 uvec slm_keypoints( const mat& Strokes )
 {
     uvec I({0}); // first point
-    int m = Strokes.n_rows;
-    int n = Strokes.n_cols;
+    unsigned int m = Strokes.n_rows;
+    unsigned int n = Strokes.n_cols;
     
-    for( int i = 0; i < m-1; i++ )
+    for( unsigned int i = 0; i < m-1; i++ )
     {
         vec r1=Strokes.row(i).t();
         vec r2=Strokes.row(i+1).t();
         uvec inds = find(diff(r2 > r1) != 0);
         uword amax;
         r2(inds).max(amax);
-        int imax = inds[amax];
+        unsigned int imax = inds[amax];
         I = join_vert(I, uvec({imax}));
     }
     
@@ -98,10 +110,12 @@ mat slm_trajectory(  //mat *Strokes_,
     slm_mu_sigma(&mu, &sigma, alpha, d);
 
     // compute t0 values from delta
-    vec T0 = zeros(m)+0.1;
+    vec T0 = zeros(m)+0.0;
     if(m > 1)
     {
-        T0.subvec(1, T0.size()-1) = delta_t.subvec(1, delta_t.size()-1);
+        for( int i = 1; i < m; i++ )
+            T0[i] = delta_t[i] * d[i]; 
+        //T0.subvec(1, T0.size()-1) = delta_t.subvec(1, delta_t.size()-1) * d.subvec(1, d.size()-1);
         T0 = cumsum(T0);
     }
     vec T1 = T0;
@@ -110,13 +124,13 @@ mat slm_trajectory(  //mat *Strokes_,
     mat dP = diff(Vp, 1, 1);
     vec D = sqrt(sum(dP % dP, 0)).t();
     
-    for( int i=0; i < m; i++ )
-    {
-        double f = fitts(D[i], w, c, b);
-        d[i] = d[i] + f;
-        if(i < m-1)
-            delta_t[i+1] = delta_t[i+1] + f;
-    }
+    // for( int i=0; i < m; i++ )
+    // {
+    //     double f = fitts(D[i], w, c, b);
+    //     d[i] = d[i] + f;
+    //     if(i < m-1)
+    //         delta_t[i+1] = delta_t[i+1] + f;
+    // }
 
     // Add onsets in order to shift lognormal to start
     T0 = T0 - exp(mu - sigma*3);
