@@ -5,7 +5,6 @@ import app
 import autograff.geom as geom
 import autograff.utils as utils
 import os
-from sandbox.geom_tools import shape_to_list, list_to_shape
 
 def limit_vec(v, min_len, max_len):
     l = np.linalg.norm(v)
